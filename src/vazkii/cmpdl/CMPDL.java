@@ -22,6 +22,8 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.commons.validator.routines.UrlValidator;
+
 import com.google.gson.Gson;
 
 import net.lingala.zip4j.core.ZipFile;
@@ -32,6 +34,8 @@ public final class CMPDL {
 	public static final Gson GSON_INSTANCE = new Gson();
 
 	public static final Pattern FILE_NAME_URL_PATTERN = Pattern.compile(".*?/([^/]*)$");
+
+	private static final UrlValidator urlValidator = new UrlValidator();
 
 	public static boolean downloading = false;
 
@@ -351,11 +355,16 @@ public final class CMPDL {
 			// This gets parsed out later
 			redirectLocation = redirectLocation.replaceAll("\\%20", " ");
 
-			if(redirectLocation.startsWith("/"))
+			if (redirectLocation.startsWith("/"))
 				uri = new URI(uri.getScheme(), uri.getHost(), redirectLocation, uri.getFragment());
 			else {
-				url = new URL(redirectLocation);
-				uri = new URI(url.getProtocol(), url.getUserInfo(), url.getHost(), url.getPort(), url.getPath(), url.getQuery(), url.getRef());
+				if (urlValidator.isValid(redirectLocation)) {
+					uri = new URI(redirectLocation);
+				} else {
+					url = new URL(redirectLocation);
+					uri = new URI(url.getProtocol(), url.getUserInfo(), url.getHost(), url.getPort(), url.getPath(),
+							url.getQuery(), url.getRef());
+				}
 			}
 		}
 
